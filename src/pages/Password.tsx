@@ -65,7 +65,7 @@ export default function PasswordPage({ forced = false }: { forced?: boolean }) {
       <div className="flex min-h-full items-center justify-center p-6">
         <div className="card w-full max-w-sm p-6">
           <div className="mb-4 flex items-center gap-3">
-            <Logo />
+            <Logo size={40} />
             <div>
               <div className="font-bold text-slate-900">Tukar kata laluan</div>
               <div className="text-xs text-slate-500">Wajib sebelum guna sistem buat kali pertama</div>
