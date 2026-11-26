@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "revotech-asset-tag-db",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "b4b8b837-dbe3-4409-87a1-a946578975a3",
       "migrations_dir": "migrations"
     }
   ],

@@ -81,22 +81,29 @@ ujian pelayar. Tile peta luar disekat semasa ujian, jadi ia tidak bergantung pad
 
 ## Deploy ke Cloudflare
 
-Sumber yang diperlukan (nama sepadan dengan `wrangler.jsonc`):
+Sumber berikut sudah dicipta dalam akaun Cloudflare dan dirujuk dalam `wrangler.jsonc`:
 
-- D1: `revotech-asset-tag-db`
-- R2: `revotech-asset-tag-photos`
-- Worker: `revotech-asset-tag`
+- D1 `revotech-asset-tag-db` (skema `migrations/0001_init.sql` sudah dipasang, dengan satu akaun Super Admin)
+- R2 `revotech-asset-tag-photos`
 
-Cara paling mudah ialah **Workers Builds** (deploy automatik setiap kali push):
+Yang tinggal ialah deploy Worker `revotech-asset-tag`. Cara paling mudah ialah **Workers Builds**
+(deploy automatik setiap kali push):
 
 1. Dashboard Cloudflare → Workers & Pages → Create → Import a repository → pilih repo ini.
 2. Nama projek mesti `revotech-asset-tag`. Build command: `npm run build`. Deploy command: `npx wrangler deploy`.
-3. Pilih branch yang hendak di-deploy.
+3. Pilih branch yang hendak di-deploy, kemudian Deploy.
 
-Skema pangkalan data: jalankan `migrations/0001_init.sql` pada D1 (sekali sahaja), atau `npm run db:remote`
-dari komputer yang sudah `wrangler login`.
+Selepas siap, Cloudflare memaparkan alamat `https://revotech-asset-tag.<subdomain>.workers.dev`.
 
-Super Admin pertama:
+Alternatif dari komputer sendiri (selepas `npx wrangler login`):
+
+```bash
+npm run deploy
+```
+
+Jika skema berubah kemudian, tambah fail baharu dalam `migrations/` dan jalankan `npm run db:remote`.
+
+Untuk cipta Super Admin tambahan secara manual (cth. jika terkunci di luar):
 
 ```bash
 npm run hash -- "KataLaluanSementara123"
