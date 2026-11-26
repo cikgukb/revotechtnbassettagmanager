@@ -1,17 +1,30 @@
 import { type FormEvent, useState } from 'react';
 import type { SessionUser } from '../../shared/types';
 import { api, errMsg } from '../api';
+import logoUrl from '../assets/revotech-logo.png';
 import { useApp } from '../store';
 import { Button, ErrorNote, Field, Icon } from '../ui';
 
-export function Logo({ size = 36 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#11284a" />
-      <path d="M16 5v22M9 10h14M11 14h10" stroke="#fbbf24" strokeWidth="2.4" strokeLinecap="round" />
-      <circle cx="16" cy="27" r="2.2" fill="#ef4444" />
-    </svg>
+// Nisbah lebar:tinggi fail logo (361 x 218 px).
+const LOGO_RATIO = 361 / 218;
+
+/**
+ * Logo Revotech Electrical Sdn Bhd. `size` ialah tinggi imej dalam px.
+ * Tulisan logo berwarna gelap, jadi atas latar gelap guna `plate` (plat putih) supaya ia terbaca.
+ */
+export function Logo({ size = 36, plate = false }: { size?: number; plate?: boolean }) {
+  const img = (
+    <img
+      src={logoUrl}
+      alt="Revotech Electrical Sdn Bhd"
+      width={Math.round(size * LOGO_RATIO)}
+      height={size}
+      className="block shrink-0"
+      draggable={false}
+    />
   );
+  if (!plate) return img;
+  return <span className="inline-flex shrink-0 items-center justify-center rounded-lg bg-white px-1.5 py-1">{img}</span>;
 }
 
 const POINTS: { icon: 'cube' | 'pin' | 'tasks' | 'shield'; text: string }[] = [
@@ -47,7 +60,7 @@ export default function LoginPage() {
       <div className="relative hidden overflow-hidden bg-navy-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
         <div className="pointer-events-none absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 20% 15%, #26508a 0, transparent 45%), radial-gradient(circle at 85% 80%, #1a3a66 0, transparent 50%)' }} />
         <div className="relative flex items-center gap-3">
-          <Logo size={44} />
+          <Logo size={64} plate />
           <div>
             <div className="text-lg font-bold leading-tight">Revotech Asset Tag Manager</div>
             <div className="text-xs text-slate-300">Pengurusan aset tiang dan respons defect</div>
@@ -72,7 +85,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center p-6">
         <form onSubmit={submit} className="w-full max-w-sm space-y-4">
           <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <Logo size={40} />
+            <Logo size={48} />
             <div className="text-base font-bold leading-tight text-slate-900">Revotech Asset Tag Manager</div>
           </div>
           <div>

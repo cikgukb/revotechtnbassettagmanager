@@ -83,7 +83,7 @@ function Shell() {
       {/* Sidebar desktop */}
       <aside className="no-print hidden w-60 shrink-0 flex-col bg-navy-950 md:flex">
         <div className="flex items-center gap-2.5 px-4 py-4">
-          <Logo size={34} />
+          <Logo size={38} plate />
           <div className="leading-tight">
             <div className="text-sm font-bold text-white">Revotech</div>
             <div className="text-[11px] text-slate-400">Asset Tag Manager</div>
@@ -104,7 +104,7 @@ function Shell() {
         {/* Bar atas mudah alih */}
         <header className="no-print flex items-center justify-between bg-navy-950 px-3 py-2 md:hidden">
           <div className="flex items-center gap-2">
-            <Logo size={28} />
+            <Logo size={26} plate />
             <span className="text-sm font-bold text-white">Revotech ATM</span>
           </div>
           <button type="button" aria-label="Menu" onClick={() => setMenu(true)} className="rounded-lg p-2 text-white hover:bg-white/10">
