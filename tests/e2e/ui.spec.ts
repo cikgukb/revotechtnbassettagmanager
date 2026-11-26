@@ -164,3 +164,26 @@ test('dashboard, senarai dan tag QR memaparkan data sebenar', async ({ page, pla
   await expect(page).toHaveURL(new RegExp(`/tiang/${pole.id}$`));
   await expect(page.getByTestId('pole-no')).toHaveText(pole.no_tiang_rondaan);
 });
+
+test('import Excel melalui wizard: semak, import, dan baris ralat dilaporkan', async ({ page, playwright }) => {
+  await uiLogin(page, 'admin.sa');
+  await waitForMap(page, 1000);
+  await page.goto('/tiang');
+  await page.getByTestId('import-open').click();
+  await page.getByTestId('import-file').setInputFiles('tests/e2e/fixtures/savr-sample.xlsx');
+  const summary = page.getByTestId('import-summary');
+  // 3 baris sah, 1 baris tanpa koordinat.
+  await expect(summary).toContainText('Akan ditambah');
+  await expect(summary).toContainText('Baris 5: Koordinat');
+  await expect(summary).toContainText('PE UJIAN EXCEL (XLS1)');
+  await page.getByTestId('import-commit').click();
+  await expect(summary).toContainText('Ditambah');
+
+  const api = await apiAs(playwright, 'viewer.sa');
+  const rows = (await (await api.get('/api/poles?q=XLS1')).json()).rows as { no_tiang_rondaan: string; status: string; last_rondaan_at: string | null; lat: number }[];
+  expect(rows.map((r) => r.no_tiang_rondaan).sort()).toEqual(['N 1', 'N 2', 'N 2/S1']);
+  expect(rows.find((r) => r.no_tiang_rondaan === 'N 1')).toMatchObject({ status: 'defect', lat: 3.0601 });
+  // Tarikh teks "20/11/2026, 09:17:00 am" dibaca sebagai waktu Malaysia.
+  expect(rows.find((r) => r.no_tiang_rondaan === 'N 2')).toMatchObject({ status: 'ok', last_rondaan_at: '2026-11-20T01:17:00.000Z' });
+  expect(rows.find((r) => r.no_tiang_rondaan === 'N 2/S1')).toMatchObject({ status: 'defect', lat: 3.0605 });
+});

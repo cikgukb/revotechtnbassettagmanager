@@ -301,8 +301,10 @@ admin.post('/sample', requirePerm('sample.manage'), async (c) => {
   const g = SAMPLE_GROUPS[gi];
   const zone = await db.prepare('SELECT id FROM zones WHERE name = ?').bind(SAMPLE_ZONE).first<{ id: number }>();
   if (!zone) throw bad('Jalankan langkah 0 dahulu');
-  const sub = await db.prepare('SELECT id FROM substations WHERE zone_id = ? AND code = ? AND is_sample = 1').bind(zone.id, g.code).first<{ id: number }>();
+  const sub = await db.prepare('SELECT id, is_sample FROM substations WHERE zone_id = ? AND code = ?').bind(zone.id, g.code).first<{ id: number; is_sample: number }>();
   if (!sub) throw bad('Jalankan langkah 0 dahulu');
+  // Kod ini sudah dipakai oleh pencawang sebenar (cth. pencawang contoh lama yang sudah ada tiang sebenar): langkau.
+  if (!sub.is_sample) return c.json({ step, total, done: step >= total, skipped: true });
   const already = await db.prepare('SELECT COUNT(*) AS n FROM poles WHERE substation_id = ?').bind(sub.id).first<{ n: number }>();
   if (already?.n) return c.json({ step, total, done: step >= total, skipped: true });
   const team = await db.prepare('SELECT id FROM teams WHERE zone_id = ? AND name = ?').bind(zone.id, g.team).first<{ id: number }>();
@@ -368,8 +370,10 @@ admin.delete('/sample', requirePerm('sample.manage'), async (c) => {
     db.prepare(`DELETE FROM stage_events WHERE pole_id IN ${sel}`),
     db.prepare(`DELETE FROM defects WHERE pole_id IN ${sel}`),
     db.prepare('DELETE FROM poles WHERE is_sample = 1'),
-    // Pencawang contoh dikekalkan jika pengguna sudah daftar tiang sebenar di bawahnya.
+    // Pencawang contoh yang sudah ada tiang sebenar dikekalkan dan menjadi pencawang biasa,
+    // supaya tiada data pengguna hilang dan data contoh boleh dijana semula kemudian.
     db.prepare('DELETE FROM substations WHERE is_sample = 1 AND NOT EXISTS (SELECT 1 FROM poles p WHERE p.substation_id = substations.id)'),
+    db.prepare('UPDATE substations SET is_sample = 0 WHERE is_sample = 1'),
     ...zones.results.map((z) => bumpRev(db, z.zone_id)),
     auditStmt(db, u, 'sample.delete', null, null),
   ]);
