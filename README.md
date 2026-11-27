@@ -11,6 +11,9 @@ tugasan senggaraan dan kawalan akses ikut role.
 - **Stages**: Daftar/Tag → Rondaan → Defect dilapor → Sedang disenggara → Selesai → Disahkan.
   Setiap peristiwa direkod dengan masa, pelaku dan gambar.
 - **Tugasan (DRS)**: papan Belum / Sedang / Selesai / Disahkan ikut jenis tugasan (T1, T2, Rentis, Cat Tiang).
+- **Lakaran PE**: lukisan rangkaian tiang satu pencawang gaya pelan TNB (A3 landskap): tiang ikut GPS,
+  talian ke tiang sebelum, nombor tiang, warna ikut tinggi atau status, tanda defect, kotak PE + GPS,
+  contoh penomboran dan blok tajuk (kontraktor, feeder, kod pencawang). Cetak → PDF atau muat turun SVG.
 - **Dashboard** boleh dicetak sebagai laporan (Cetak → Simpan sebagai PDF).
 - **Import / eksport** CSV dan Excel dalam format lajur SENARAI TIANG SAVR.
 - **Audit log** untuk setiap tindakan penting.

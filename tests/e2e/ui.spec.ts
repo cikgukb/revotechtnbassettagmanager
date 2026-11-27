@@ -187,3 +187,20 @@ test('import Excel melalui wizard: semak, import, dan baris ralat dilaporkan', a
   expect(rows.find((r) => r.no_tiang_rondaan === 'N 2')).toMatchObject({ status: 'ok', last_rondaan_at: '2026-11-20T01:17:00.000Z' });
   expect(rows.find((r) => r.no_tiang_rondaan === 'N 2/S1')).toMatchObject({ status: 'defect', lat: 3.0605 });
 });
+
+test('lakaran PE: lukisan dijana, tukar pencawang, klik tiang buka profil', async ({ page }) => {
+  await uiLogin(page, 'viewer.sa');
+  await page.getByRole('link', { name: 'Lakaran PE' }).first().click();
+  const sheet = page.locator('svg[aria-label^="Lakaran rangkaian tiang"]');
+  await expect(sheet).toBeVisible();
+  expect(await sheet.locator('circle[r="4.5"]').count()).toBeGreaterThan(10);
+  await expect(sheet).toContainText('KOD PENCAWANG');
+  const select = page.getByTestId('lakaran-pe');
+  const second = await select.locator('option').nth(1).getAttribute('value');
+  await select.selectOption(second!);
+  await expect(page).toHaveURL(new RegExp(`/lakaran\\?pe=${second}$`));
+  const label = (await sheet.locator('g[style*="cursor"] text').first().textContent())!;
+  await sheet.locator('g[style*="cursor"]').first().click();
+  await expect(page).toHaveURL(/\/tiang\/\d+$/);
+  await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
+});

@@ -82,6 +82,7 @@ test.describe('pengesahan & kawalan akses', () => {
     const shahAlamPole = (await (await superAdmin.get('/api/poles?limit=1')).json()).rows[0];
     expect((await u.get(`/api/poles/${shahAlamPole.id}`)).status()).toBe(404);
     expect((await u.post(`/api/poles/${shahAlamPole.id}/rondaan`, { data: { defects: [] } })).status()).toBe(404);
+    expect((await u.get(`/api/poles/schematic?substation_id=${shahAlamPole.substation_id}`)).status()).toBe(404);
     expect((await u.patch(`/api/admin/users/${userId}`, { data: { role: 'super_admin' } })).status()).toBe(403);
 
     // Tukar role membatalkan sesi sedia ada serta-merta.
@@ -214,5 +215,20 @@ test.describe('data', () => {
     expect(stats.total_poles).toBe(geo.poles.length);
     expect(lines.length - 1).toBe(geo.poles.length);
     expect(stats.total_poles).toBeGreaterThan(1000);
+  });
+
+  test('lakaran PE: semua tiang pencawang dengan sambungan tiang sebelum', async ({ playwright }) => {
+    const viewer = await apiAs(playwright, 'viewer.sa');
+    const sub = (await (await viewer.get('/api/meta')).json()).substations[0];
+    const res = await viewer.get(`/api/poles/schematic?substation_id=${sub.id}`);
+    expect(res.status()).toBe(200);
+    const data = await res.json();
+    expect(data.substation).toMatchObject({ id: sub.id, code: sub.code });
+    expect(data.substation.zone_id).toBeUndefined();
+    const geo = (await (await viewer.get('/api/poles/geo')).json()).poles.filter((r: unknown[]) => r[5] === sub.id);
+    expect(data.poles).toHaveLength(geo.length);
+    expect(data.poles.some((p: { prev: number | null }) => p.prev !== null)).toBe(true);
+    expect((await viewer.get('/api/poles/schematic?substation_id=999999')).status()).toBe(404);
+    expect((await viewer.get('/api/poles/schematic')).status()).toBe(400);
   });
 });

@@ -3,6 +3,7 @@ import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec';
 import { hashPassword, newTagCode, passwordProblem, verifyPassword } from '../../shared/password';
 import { SAMPLE_GROUPS, samplePoles } from '../../shared/sample';
 import { csvCell, mapSavrRow, parseSavrDate, toCsv } from '../../shared/savr';
+import { feederOf, feeders, joinList, layoutSchematic, niceScale, numberingExample, poleKind, segHitsBox } from '../../shared/schematic';
 import { nextDefectStatus, poleStatusFrom, poleStep } from '../../shared/stages';
 import { PERMS, can } from '../../shared/types';
 import { ngon, rect, ribbon } from '../../src/map/geometry';
@@ -147,5 +148,61 @@ describe('peta', () => {
       expect(ring[0]).toEqual(ring[ring.length - 1]);
       expect(ring.length).toBeGreaterThanOrEqual(5);
     }
+  });
+});
+
+describe('lakaran PE', () => {
+  const sub = { id: 1, name: 'PE KG BAHAGIA', code: 'IPH00207', functional_location: null, lat: 4.815381, lng: 101.085224 };
+  const pole = (id: number, no: string, prev: number | null, dLat: number, dLng: number, height: number | null = 10, type: string | null = 'LV') =>
+    ({ id, no, prev, lat: sub.lat + dLat, lng: sub.lng + dLng, type, height, status: 'ok' as const, open: id === 3 ? 1 : 0 });
+  const poles = [
+    pole(1, 'CDE 1', null, 0.0003, -0.0003),
+    pole(2, 'CDE 2', 1, 0.0008, -0.0008, 9),
+    pole(3, 'A 1', null, 0.0004, 0.0001, 7.5),
+    pole(4, 'A 2', 3, 0.0012, 0.0006, null, 'Servis'),
+    pole(5, 'CE 22', 99, 0.01, -0.01, null, null),
+  ];
+  const box = { x: 0, y: 0, w: 1000, h: 600 };
+
+  it('feeder, senarai dan contoh penomboran', () => {
+    expect(feederOf('CE 22')).toBe('CE');
+    expect(feederOf('a 9/1')).toBe('A');
+    expect(feederOf('12')).toBeNull();
+    expect(feeders(poles)).toEqual(['A', 'CDE', 'CE']);
+    expect(joinList(['A', 'B', 'C', 'CDE'])).toBe('A, B, C & CDE');
+    expect(joinList([])).toBe('-');
+    expect(numberingExample(poles)).toEqual({ feeder: 'CDE', no: '1' });
+  });
+  it('jenis tiang ikut tinggi', () => {
+    expect(poleKind({ type: 'LV', height: 10 })).toBe('p10');
+    expect(poleKind({ type: 'LV', height: 9 })).toBe('p9');
+    expect(poleKind({ type: 'LV', height: 7.5 })).toBe('p75');
+    expect(poleKind({ type: 'Servis', height: null })).toBe('p75');
+    expect(poleKind({ type: null, height: null })).toBe('lain');
+  });
+  it('susun atur: semua tiang dalam kotak, utara ke atas, sambung ke tiang sebelum dan PE', () => {
+    const l = layoutSchematic({ substation: sub, poles }, box);
+    expect(l.nodes).toHaveLength(5);
+    for (const n of l.nodes) {
+      expect(n.x).toBeGreaterThanOrEqual(0);
+      expect(n.x).toBeLessThanOrEqual(1000);
+      expect(n.y).toBeGreaterThanOrEqual(0);
+      expect(n.y).toBeLessThanOrEqual(600);
+    }
+    const y = (id: number) => l.nodes.find((n) => n.id === id)!.y;
+    expect(y(5)).toBeLessThan(y(1)); // lebih utara = lebih atas
+    // 2 sambungan tiang sebelum (prev 99 tiada) + 2 tiang akar dekat PE
+    expect(l.edges).toHaveLength(4);
+    expect(l.edges.filter((e) => e.service)).toHaveLength(1);
+    expect(l.pe).not.toBeNull();
+  });
+  it('tiada tiang: susun atur kosong', () => {
+    expect(layoutSchematic({ substation: { ...sub, lat: null, lng: null }, poles: [] }, box).nodes).toEqual([]);
+  });
+  it('segmen memotong kotak dan skala bulat', () => {
+    expect(segHitsBox({ x1: 0, y1: 0, x2: 10, y2: 10, service: false }, { x: 4, y: 4, w: 2, h: 2 })).toBe(true);
+    expect(segHitsBox({ x1: 0, y1: 0, x2: 10, y2: 0, service: false }, { x: 4, y: 4, w: 2, h: 2 })).toBe(false);
+    expect(niceScale(1, 220).meters).toBe(200);
+    expect(niceScale(0.5, 220).meters).toBe(100);
   });
 });
