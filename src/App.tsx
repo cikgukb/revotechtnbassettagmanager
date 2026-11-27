@@ -13,6 +13,7 @@ const TasksPage = lazy(() => import('./pages/Tasks'));
 const UsersPage = lazy(() => import('./pages/Users'));
 const AuditPage = lazy(() => import('./pages/Audit'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const SchematicPage = lazy(() => import('./pages/Schematic'));
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ function Shell() {
     { to: '/dashboard', label: 'Dashboard', icon: 'chart', show: true },
     { to: '/tiang', label: 'Senarai Tiang', icon: 'list', show: true },
     { to: '/tugasan', label: 'Tugasan', icon: 'tasks', show: true },
+    { to: '/lakaran', label: 'Lakaran PE', icon: 'map', show: true },
     { to: '/pengguna', label: 'Pengguna & Tetapan', icon: 'users', show: can(role, 'user.manage') },
     { to: '/audit', label: 'Audit Log', icon: 'shield', show: can(role, 'audit.view') },
   ].filter((n) => n.show) as NavItem[];
@@ -58,6 +60,7 @@ function Shell() {
   else if ((m = matchPath('/tiang/:id', path))) page = <ProfilePage id={Number(m.id)} />;
   else if ((m = matchPath('/t/:code', path))) page = <ProfilePage tag={m.code} />;
   else if (path === '/tugasan') page = <TasksPage />;
+  else if (path === '/lakaran') page = <SchematicPage />;
   else if (path === '/pengguna' && can(role, 'user.manage')) page = <UsersPage />;
   else if (path === '/audit' && can(role, 'audit.view')) page = <AuditPage />;
   else if (path === '/akaun') page = <PasswordPage />;

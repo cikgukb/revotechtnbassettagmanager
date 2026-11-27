@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { newTagCode, randomToken } from '../../shared/password';
+import type { SchematicData, SchematicPole, SchematicSubstation } from '../../shared/schematic';
 import { recomputePoleSql } from '../../shared/stages';
 import {
   DEFECT_CATEGORIES, DEFECT_CATEGORY_INFO, POLE_STATUS, SEVERITIES,
@@ -55,6 +56,28 @@ poles.get('/geo', async (c) => {
   const idx = Object.fromEntries(POLE_STATUS.map((s, i) => [s, i]));
   const out: GeoRow[] = rows.map((r) => [r[0], r[1], r[2], idx[r[3]] ?? 0, r[4], r[5], r[6], r[7]]);
   return c.json({ rev: rev?.rev ?? 0, poles: out });
+});
+
+// ---- Lakaran rangkaian satu pencawang (semua tiang, medan yang perlu untuk lukisan sahaja) ----
+poles.get('/schematic', async (c) => {
+  const u = c.get('user');
+  const id = intParam(c.req.query('substation_id'), 'substation_id');
+  const db = c.env.DB;
+  const sub = await db
+    .prepare('SELECT id, zone_id, name, code, functional_location, lat, lng FROM substations WHERE id = ?')
+    .bind(id)
+    .first<SchematicSubstation & { zone_id: number }>();
+  if (!sub || !inZone(u, sub.zone_id)) throw notFound('Pencawang tidak dijumpai');
+  const rows = await db
+    .prepare(
+      `SELECT id, no_tiang_rondaan AS no, prev_pole_id AS prev, lat, lng, pole_type AS type, height_m AS height, status, open_defects AS open
+       FROM poles WHERE substation_id = ? AND deleted_at IS NULL ORDER BY id`,
+    )
+    .bind(id)
+    .all<SchematicPole>();
+  const { zone_id: _z, ...substation } = sub;
+  const out: SchematicData = { substation, poles: rows.results };
+  return c.json(out);
 });
 
 // ---- Senarai (jadual) ----
